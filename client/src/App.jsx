@@ -7,7 +7,9 @@ import { v4 as uuidv4 } from "uuid";
 
 import "./App.css";
 
-const WS_URL = "ws://127.0.0.1:8000";
+const { REACT_APP_WEBSOCKET_URL } = import.meta.env;
+const WS_URL = REACT_APP_WEBSOCKET_URL || "ws://127.0.0.1:8000";
+console.log(WS_URL);
 
 function isUserEvent(message) {
   let evt = JSON.parse(message.data);
@@ -43,7 +45,7 @@ function App() {
         type: "userevent",
       });
     }
-  }, [username, sendJsonMessage, readyState]);
+  }, [username, channelName, sendJsonMessage, readyState]);
 
   return (
     <>
@@ -115,7 +117,7 @@ function LoginSection({ onLogin }) {
     </div>
   );
 }
-
+/*
 function History() {
   console.log("history");
   const { lastJsonMessage } = useWebSocket(WS_URL, {
@@ -131,6 +133,7 @@ function History() {
     </ul>
   );
 }
+*/
 
 function Users() {
   const { lastJsonMessage } = useWebSocket(WS_URL, {
