@@ -1,13 +1,32 @@
 const { WebSocket, WebSocketServer } = require("ws");
 const http = require("http");
+const https = require("https");
 const uuidv4 = require("uuid").v4;
+const path = require("path");
+const fs = require("fs");
 
-// Spinning the http server and the WebSocket server.
-const server = http.createServer();
-const wsServer = new WebSocketServer({ server });
 const port = process.env.PORT || 8000;
+const privateKey = fs.readFileSync(
+  path.join(__dirname, "/certs/server.key"),
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  path.join(__dirname, "/certs/server.crt"),
+  "utf8"
+);
+const credentials = {
+  key: privateKey,
+  cert: certificate,
+};
+
+const server = https.createServer(credentials, (req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("WebSocket Server\n");
+});
+const wsServer = new WebSocketServer({ server });
+
 server.listen(port, () => {
-  console.log(`WebSocket server is running on port ${port}`);
+  console.log(`https server listening on port ${port}`);
 });
 
 // I'm maintaining all active connections in this object
@@ -77,6 +96,9 @@ wsServer.on("connection", function (connection) {
   // Store the new connection and handle messages
   clients[userId] = { conn: connection };
   console.log(`${userId} connected.`);
+
+  connection.on("error", console.error);
+
   connection.on("message", (message) => handleMessage(message, userId));
   // User disconnected
   connection.on("close", () => handleDisconnect(userId));
