@@ -19,7 +19,7 @@ const credentials = {
   cert: certificate,
 };
 
-const server = https.createServer(credentials, (req, res) => {
+const server = http.createServer(credentials, (req, res) => {
   res.writeHead(200, { "Content-Type": "text/plain" });
   res.end("WebSocket Server\n");
 });
