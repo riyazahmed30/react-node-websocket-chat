@@ -6,27 +6,12 @@ const path = require("path");
 const fs = require("fs");
 
 const port = process.env.PORT || 8000;
-const privateKey = fs.readFileSync(
-  path.join(__dirname, "/certs/server.key"),
-  "utf8"
-);
-const certificate = fs.readFileSync(
-  path.join(__dirname, "/certs/server.crt"),
-  "utf8"
-);
-const credentials = {
-  key: privateKey,
-  cert: certificate,
-};
 
-const server = http.createServer(credentials, (req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("WebSocket Server\n");
-});
+const server = http.createServer({});
 const wsServer = new WebSocketServer({ server });
 
 server.listen(port, () => {
-  console.log(`https server listening on port ${port}`);
+  console.log(`http server listening on port ${port}`);
 });
 
 // I'm maintaining all active connections in this object
