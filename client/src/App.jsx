@@ -243,7 +243,7 @@ function Document() {
                   {fileTypes.includes(mimeType) ? (
                     <img alt="img" src={content} width="200" />
                   ) : (
-                    <iframe src={content} width="50%" />
+                    <iframe title="my frame" src={content} width="50%" />
                   )}
                 </div>
               ) : (
