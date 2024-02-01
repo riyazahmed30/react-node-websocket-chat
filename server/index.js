@@ -27,6 +27,7 @@ let userActivity = [];
 const typesDef = {
   USER_EVENT: "userevent",
   CONTENT_CHANGE: "contentchange",
+  FILES: "file",
 };
 
 function broadcastMessage(json, currentChannel) {
@@ -52,12 +53,11 @@ function handleMessage(message, userId) {
     clients[userId].channelName = dataFromClient.channelName;
     userActivity.push(`${dataFromClient.username} joined to edit the document`);
     json.data = { users, userActivity };
-  } else if (dataFromClient.type === typesDef.CONTENT_CHANGE) {
-    editorContent = dataFromClient.content;
-    userObj = dataFromClient.userObj;
-    messageId = dataFromClient.messageId;
-    json.data = { editorContent, userObj, messageId, userActivity };
-    broadcastMessage(json, dataFromClient.channelName);
+  } else if (
+    dataFromClient.type === typesDef.CONTENT_CHANGE ||
+    dataFromClient.type === typesDef.FILES
+  ) {
+    broadcastMessage(dataFromClient, dataFromClient.channelName);
   }
 }
 

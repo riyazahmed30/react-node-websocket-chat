@@ -18,7 +18,7 @@ function isUserEvent(message) {
 
 function isDocumentEvent(message) {
   let evt = JSON.parse(message.data);
-  return evt.type === "contentchange";
+  return evt.type === "contentchange" || evt.type === "file";
 }
 
 let loginUserName = "";
@@ -172,6 +172,7 @@ function EditorSection() {
 }
 
 function Document() {
+  const [file, setFiles] = useState();
   const [html, setHtml] = useState();
   const [messages, setMessages] = useState([]);
   const { lastJsonMessage, sendJsonMessage } = useWebSocket(WS_URL, {
@@ -180,19 +181,39 @@ function Document() {
   });
 
   useEffect(() => {
-    if (lastJsonMessage?.data.userActivity) {
+    if (lastJsonMessage?.messageId) {
       setMessages([...messages, lastJsonMessage]);
     }
+    // eslint-disable-next-line
   }, [lastJsonMessage]);
 
   function onSendClick() {
-    sendJsonMessage({
-      type: "contentchange",
-      content: html,
-      userObj: { username: loginUserName },
-      messageId: uuidv4(),
-      channelName: loginChannelName,
-    });
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        sendJsonMessage({
+          type: "file",
+          content: reader.result,
+          mimeType: file.type,
+          fileName: file.name,
+          userObj: { username: loginUserName },
+          messageId: uuidv4(),
+          channelName: loginChannelName,
+        });
+      };
+    } else {
+      sendJsonMessage({
+        type: "contentchange",
+        content: html,
+        userObj: { username: loginUserName },
+        messageId: uuidv4(),
+        channelName: loginChannelName,
+      });
+    }
+    const fileRef = document.querySelector(".file");
+    fileRef.value = "";
+    setFiles("");
     setHtml("");
   }
 
@@ -200,11 +221,15 @@ function Document() {
     setHtml(e.target.value);
   };
 
+  const handleFileChange = (e) => {
+    setFiles(e.target.files[0]);
+  };
+  const fileTypes = ["image/png", "image/jpeg", "image/jpg"];
   return (
     <div>
       <ul className="message-list">
         {messages.map((message) => {
-          const { editorContent, messageId, userObj } = message.data;
+          const { content, messageId, userObj, mimeType } = message;
           return (
             <li
               key={messageId}
@@ -213,7 +238,17 @@ function Document() {
               }`}
             >
               <div>{userObj.username}</div>
-              <div>{editorContent}</div>
+              {message.type === "file" ? (
+                <div>
+                  {fileTypes.includes(mimeType) ? (
+                    <img alt="img" src={content} width="200" />
+                  ) : (
+                    <iframe src={content} width="50%" />
+                  )}
+                </div>
+              ) : (
+                <div>{content}</div>
+              )}
             </li>
           );
         })}
@@ -225,7 +260,13 @@ function Document() {
         onChange={handleHtmlChange}
         placeholder="send message"
         style={{ width: "100%" }}
-      ></textarea>
+      />
+      <input
+        type="file"
+        accept=".jpg, .jpeg, .png, .pdf, .txt, .docx, .doc"
+        onChange={handleFileChange}
+        className="file"
+      />
 
       <button
         type="button"
